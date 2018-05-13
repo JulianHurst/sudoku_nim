@@ -7,8 +7,9 @@ type
     col: int
 
 var grid: array[9, array[9, int]]
+var mutables: seq[Mutable]
 
-proc recSolve(mutables: seq[Mutable], i: int, j: int, back: bool)
+proc recSolve(i: int, j: int, back: bool)
 proc printGrid()
 
 proc checkLine(i: int, p: int, x: int): bool =
@@ -47,7 +48,7 @@ proc check(i: int, j: int, minimum: int): int =
   return -1
 
 proc find_zeros(): seq[Mutable] =
-  var mutables = newSeq[Mutable](0)
+  mutables = newSeq[Mutable](0)
   for i in 0..high(grid):
     for j in 0..high(grid[i]):
       if grid[i][j] == 0:
@@ -73,35 +74,38 @@ proc solve(): bool =
             j = 8
 ]#
 
-proc isMutable(mutables: seq[Mutable], i: int, j: int): bool =
+proc isMutable(i: int, j: int): bool =
   result = false
   for mutable in mutables:
     if mutable.row == i and mutable.col == j:
       result = true
 
-proc goBack(mutables: seq[Mutable], i: int, j: int) =
+proc goBack(i: int, j: int) =
   if j > 0:
-    recSolve(mutables, i, j - 1, true)
+    recSolve(i, j - 1, true)
   else:
-    recSolve(mutables, i - 1, 8, true)
+    recSolve(i - 1, 8, true)
 
-proc goForwards(mutables: seq[Mutable], i: int, j: int) =
+proc goForwards(i: int, j: int) =
   if j < 8:
-    recSolve(mutables, i, j + 1, false)
+    recSolve(i, j + 1, false)
   else:
-    recSolve(mutables, i + 1, 0, false)
+    recSolve(i + 1, 0, false)
 
-proc printMutables(mutables: seq[Mutable]) =
+proc printMutables() =
   echo "\n"
   for i in mutables:
     stdout.write "i : ", i.row, " j : ", i.col, " "
 
-proc recSolve(mutables: seq[Mutable], i: int, j: int, back: bool) =
-  if not isMutable(mutables, i, j):
+proc recSolve(i: int, j: int, back: bool) =
+  #echo " i : ", i, " j : ", j
+  if not isMutable(i, j):
     if back:
-      goBack(mutables, i, j)
+      goBack(i, j)
     else:
-      goForwards(mutables, i, j)
+      if i == 8 and j == 8:
+        return
+      goForwards(i, j)
   else:
     let 
       x = check(i, j, grid[i][j])
@@ -109,10 +113,12 @@ proc recSolve(mutables: seq[Mutable], i: int, j: int, back: bool) =
       grid[i][j] = x
       if i == 8 and j == 8:
         return
-      goForwards(mutables, i, j)
+      goForwards(i, j)
     else:
       grid[i][j] = 0
-      goBack(mutables, i, j)
+      if i == 0 and j == 0:
+        return
+      goBack(i, j)
 
 proc readGrid(filename: string) =
   var f: File
@@ -129,8 +135,8 @@ proc readGrid(filename: string) =
 
 proc main(filename: string) =
   readGrid(filename)
-  let mutables = find_zeros()
-  recSolve(mutables, 0, 0, false)
+  mutables = find_zeros()
+  recSolve(0, 0, false)
   printGrid()
 
 proc printGrid() =
@@ -141,7 +147,7 @@ proc printGrid() =
       stdout.write $j & " "
 
 proc printMain() =
-  let mutables = find_zeros()
+  mutables = find_zeros()
   printGrid()
 
 if paramCount() != 1:
