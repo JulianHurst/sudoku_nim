@@ -56,29 +56,30 @@ proc find_zeros(): seq[Mutable] =
         mutables.add(mutable)
   return mutables
 
-#[
-proc solve(): bool =
-  var step_back = 0
-  for i in low(grid)..high(grid):
-    for j in low(grid[i])..high(grid[i]):
-      if grid[i][j] == 0:
-        let 
-          x = check(i, j)
-        if x != -1:
-          grid[i][j] = x
-        else:
-          if j > 0:
-            j = j - 1
-          else:
-            i = i - 1
-            j = 8
-]#
-
 proc isMutable(i: int, j: int): bool =
   result = false
   for mutable in mutables:
     if mutable.row == i and mutable.col == j:
       result = true
+
+#[
+proc solve() =
+  var 
+    istep_back = 0
+    jstep_back = 0
+  for i in low(grid)..high(grid):
+    for j in low(grid[i])..high(grid[i]):
+      var x = check(i, j, grid[i][j])
+      while not isMutable(i - istep_back, j - jstep_back) and x == -1:
+        if j - jstep_back > 0:
+          jstep_back = jstep_back + 1
+        else:
+          istep_back = istep_back + 1
+          jstep_back = 8 - j
+        echo "i : ", i, " j : ", j, " istep : ", istep_back, " jstep : ", jstep_back
+        x = check(i - istep_back, j - jstep_back, grid[i - istep_back][j - jstep_back])
+      grid[i][j] = x
+]#
 
 proc goBack(i: int, j: int) =
   if j > 0:
@@ -98,7 +99,6 @@ proc printMutables() =
     stdout.write "i : ", i.row, " j : ", i.col, " "
 
 proc recSolve(i: int, j: int, back: bool) =
-  #echo " i : ", i, " j : ", j
   if not isMutable(i, j):
     if back:
       goBack(i, j)
@@ -137,6 +137,7 @@ proc main(filename: string) =
   readGrid(filename)
   mutables = find_zeros()
   recSolve(0, 0, false)
+  #solve()
   printGrid()
 
 proc printGrid() =
